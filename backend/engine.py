@@ -42,16 +42,34 @@ from backend.rules import apply_rules
 from backend.features import get_feature_columns
 
 # ---------------------------------------------------------------------------
-# Global state loaded once at import time
+# Global state — loaded LAZILY on first scoring call
+# (allows the module to import cleanly on a fresh Render deploy where
+#  the build command hasn't run yet)
 # ---------------------------------------------------------------------------
 
 _DIR = os.path.dirname(__file__)
 
-MODEL = joblib.load(os.path.join(_DIR, 'models', 'fraud_model.joblib'))
-METADATA = json.load(open(os.path.join(_DIR, 'models', 'model_metadata.json')))
-GRAPH_RISKS = json.load(open(os.path.join(_DIR, 'generated', 'graph_risks.json')))
-EXPLAINER = shap.TreeExplainer(MODEL)
+MODEL = None
+METADATA = None
+GRAPH_RISKS = None
+EXPLAINER = None
 FEATURE_COLS = get_feature_columns()
+
+_artifacts_loaded = False
+
+
+def _load_artifacts():
+    """Load ML model, graph risks, and SHAP explainer once on first use."""
+    global MODEL, METADATA, GRAPH_RISKS, EXPLAINER, _artifacts_loaded
+    if _artifacts_loaded:
+        return
+    print('[engine] Loading artifacts...')
+    MODEL = joblib.load(os.path.join(_DIR, 'models', 'fraud_model.joblib'))
+    METADATA = json.load(open(os.path.join(_DIR, 'models', 'model_metadata.json')))
+    GRAPH_RISKS = json.load(open(os.path.join(_DIR, 'generated', 'graph_risks.json')))
+    EXPLAINER = shap.TreeExplainer(MODEL)
+    _artifacts_loaded = True
+    print('[engine] Artifacts loaded.')
 
 ACTION_THRESHOLDS = {'ALLOW': 30, 'OTP': 60, 'HOLD': 85, 'BLOCK': 100}
 
@@ -68,6 +86,7 @@ _BINARY_FEATURES = {'new_device', 'new_payee', 'city_change'}
 
 
 def score_transaction(tx: dict, historical_features: dict) -> dict:
+    _load_artifacts()
     feature_vector = [float(historical_features.get(col, 0.0)) for col in FEATURE_COLS]
     # Wrap as DataFrame so LGBMClassifier doesn't warn about missing feature names
     fv_df  = pd.DataFrame([feature_vector], columns=FEATURE_COLS)
