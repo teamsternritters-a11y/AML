@@ -121,6 +121,14 @@ async def score(req: ScoreRequest):
     historical_features = _compute_inline_features(
         req.sender_id, req.receiver_id, req.amount, req.device_id, req.city, ts_epoch)
     result = score_transaction(tx, historical_features)
+    result.update({
+        "sender_id": req.sender_id,
+        "receiver_id": req.receiver_id,
+        "amount": req.amount,
+        "device_id": req.device_id,
+        "city": req.city,
+        "timestamp": req.timestamp or ts_dt.isoformat()
+    })
     SCORED_TRANSACTIONS.insert(0, result)
     if len(SCORED_TRANSACTIONS) > 1000:
         SCORED_TRANSACTIONS.pop()
