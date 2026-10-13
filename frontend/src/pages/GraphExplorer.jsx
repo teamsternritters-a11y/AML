@@ -17,6 +17,7 @@ export default function GraphExplorer() {
   const [graphData, setGraphData] = useState(null)
   const [accountRisk, setAccountRisk] = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
+  const [hoverNode, setHoverNode] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [viewMode, setViewMode] = useState('canvas') // 'canvas' | 'table'
@@ -106,6 +107,19 @@ export default function GraphExplorer() {
     if (r >= 0.2) return '#F59E0B' // Amber
     return '#10B981' // Green
   }
+
+  // Selected account ID alias for canvas highlighting
+  const selectedAccount = selectedNode?.id || accountId
+
+  // Tune d3-force physics every time graph data changes
+  useEffect(() => {
+    if (!graphData || !fgRef.current) return
+    if (fgRef.current) {
+      fgRef.current.d3Force('charge').strength(-200); 
+      fgRef.current.d3Force('link').distance(60);     
+      fgRef.current.d3ReheatSimulation();
+    }
+  }, [graphData])
 
   return (
     <div>
@@ -220,36 +234,64 @@ export default function GraphExplorer() {
                 nodeRelSize={6}
                 nodeVal={(node) => (node.id === accountId ? 14 : 7)}
                 nodeCanvasObject={(node, ctx, globalScale) => {
-                  const label = node.id
-                  const fontSize = 11 / globalScale
-                  const isFocal = node.id === accountId
-                  const isSelected = selectedNode?.id === node.id
+                  // 1. Draw the Node Circle
+                  const nodeRadius = 6;
+                  ctx.beginPath();
+                  ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
+                  // Color logic (Red > 0.6, Amber > 0.3, Green otherwise)
+                  ctx.fillStyle = node.graph_risk > 0.6 ? '#FB7185' : node.graph_risk > 0.3 ? '#FBBF24' : '#34D399';
+                  ctx.fill();
 
-                  ctx.beginPath()
-                  ctx.arc(node.x, node.y, isFocal ? 7 : 5, 0, 2 * Math.PI, false)
-                  ctx.fillStyle = getNodeColor(node)
-                  ctx.fill()
-
-                  if (isFocal || isSelected) {
-                    ctx.strokeStyle = '#1E3A8A'
-                    ctx.lineWidth = 2 / globalScale
-                    ctx.stroke()
+                  // Highlight selected/hovered nodes
+                  if (node.id === selectedAccount || node === hoverNode) {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#2998F4';
+                    ctx.stroke();
                   }
 
-                  // Label
-                  ctx.font = `${isFocal ? 'bold ' : ''}${fontSize}px sans-serif`
-                  ctx.textAlign = 'center'
-                  ctx.textBaseline = 'top'
-                  ctx.fillStyle = isFocal ? '#1E3A8A' : '#476B9A'
-                  ctx.fillText(label, node.x, node.y + (isFocal ? 9 : 7))
+                  // 2. Draw the Account ID with a Text Halo
+                  const label = node.id;
+                  // Dynamically scale font so it's readable at any zoom, but cap it
+                  const fontSize = Math.max(3, Math.min(8, 14 / globalScale));
+                  ctx.font = `600 ${fontSize}px system-ui, sans-serif`;
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'top';
+                  
+                  const textY = node.y + nodeRadius + 2; // Position just below the circle
+
+                  // Magic step: Draw a thick opaque white stroke behind the text to protect against dark lines
+                  ctx.lineWidth = Math.max(2, fontSize * 0.45);
+                  ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+                  ctx.strokeText(label, node.x, textY);
+
+                  // Draw the actual text in Navy blue
+                  ctx.fillStyle = '#12356B';
+                  ctx.fillText(label, node.x, textY);
                 }}
-                linkDirectionalArrowLength={4}
+                linkDirectionalArrowLength={5}
                 linkDirectionalArrowRelPos={1}
-                linkColor={() => '#CBD5E1'}
-                linkWidth={(link) => {
-                  const totalAmt = (link.amounts || []).reduce((a, b) => a + b, 0)
-                  return Math.min(Math.max(1, totalAmt / 5000), 5)
+                linkDirectionalArrowColor={(link) => {
+                  const sId = typeof link.source === 'object' ? link.source.id : link.source
+                  const tId = typeof link.target === 'object' ? link.target.id : link.target
+                  const isHovered = hoverNode && (sId === hoverNode.id || tId === hoverNode.id)
+                  const isSelected = selectedAccount && (sId === selectedAccount || tId === selectedAccount)
+                  return isHovered || isSelected ? '#0F172A' : '#334155'
                 }}
+                linkColor={(link) => {
+                  const sId = typeof link.source === 'object' ? link.source.id : link.source
+                  const tId = typeof link.target === 'object' ? link.target.id : link.target
+                  const isHovered = hoverNode && (sId === hoverNode.id || tId === hoverNode.id)
+                  const isSelected = selectedAccount && (sId === selectedAccount || tId === selectedAccount)
+                  return isHovered || isSelected ? '#0F172A' : '#334155'
+                }}
+                linkWidth={(link) => {
+                  const sId = typeof link.source === 'object' ? link.source.id : link.source
+                  const tId = typeof link.target === 'object' ? link.target.id : link.target
+                  const isHovered = hoverNode && (sId === hoverNode.id || tId === hoverNode.id)
+                  const isSelected = selectedAccount && (sId === selectedAccount || tId === selectedAccount)
+                  return isHovered || isSelected ? 2.5 : 1.5
+                }}
+                onNodeHover={(node) => setHoverNode(node)}
                 onNodeClick={(node) => {
                   setSelectedNode(node)
                 }}
@@ -275,16 +317,16 @@ export default function GraphExplorer() {
               >
                 <span><strong>Legend:</strong></span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563EB' }} /> Focus Account
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FB7185' }} /> High Risk (&gt;60%)
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} /> High Risk (&ge;50%)
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBBF24' }} /> Med Risk (&gt;30%)
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }} /> Med Risk (&ge;20%)
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#34D399' }} /> Normal
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} /> Normal
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', border: '2px solid #2998F4' }} /> Selected / Hover
                 </span>
               </div>
             </>
