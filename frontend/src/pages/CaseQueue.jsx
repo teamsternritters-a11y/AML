@@ -12,6 +12,7 @@ export default function CaseQueue() {
   const [decisionNote, setDecisionNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionError, setActionError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null)
 
   const params = useMemo(() => {
     return statusFilter === 'ALL' ? { limit: 100 } : { status: statusFilter, limit: 100 }
@@ -30,12 +31,15 @@ export default function CaseQueue() {
     if (!selectedCase) return
     setIsSubmitting(true)
     setActionError(null)
+    setSuccessMessage(null)
     try {
       await post(`/cases/${selectedCase.case_id}/decision`, {
         decision,
         note: decisionNote.trim() || `Adjudicated as ${decision} via Compliance Console`,
       })
       setDecisionNote('')
+      setSuccessMessage('Decision recorded successfully')
+      setTimeout(() => setSuccessMessage(null), 3000)
       await refetch()
     } catch (err) {
       setActionError(err.message)
@@ -237,6 +241,16 @@ export default function CaseQueue() {
                   {actionError}
                 </div>
               )}
+              {successMessage && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: '#DCFCE7', border: '1px solid #86EFAC',
+                  borderRadius: '8px', padding: '10px 14px', fontSize: '13px',
+                  fontWeight: 600, color: '#15803D', animation: 'fadeIn 0.2s ease',
+                }}>
+                  <span>✓</span> {successMessage}
+                </div>
+              )}
 
               {selectedCase.status === 'open' ? (
                 <div className="decision-area">
@@ -256,7 +270,7 @@ export default function CaseQueue() {
                       onClick={() => handleDecision('approve')}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Submitting…' : '✓ Release & Approve Transaction'}
+                      {isSubmitting ? '⏳ Saving…' : '✓ Release & Approve Transaction'}
                     </button>
                     <button
                       type="button"
@@ -264,7 +278,7 @@ export default function CaseQueue() {
                       onClick={() => handleDecision('reject')}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Submitting…' : '✕ Confirm Block & Escalate SAR'}
+                      {isSubmitting ? '⏳ Saving…' : '✕ Confirm Block & Escalate SAR'}
                     </button>
                   </div>
                 </div>

@@ -183,7 +183,18 @@ export default function GraphExplorer() {
         {/* Left: Force Graph Canvas */}
         <div className="graph-canvas-wrap" ref={containerRef}>
           {loading ? (
-            <LoadingState message={`Traversing ${hops}-hop neighborhood for ${accountId}…`} />
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', height: '100%', gap: '16px', color: 'var(--text-muted)',
+            }}>
+              <div style={{
+                width: '40px', height: '40px', border: '4px solid var(--bg-light)',
+                borderTopColor: 'var(--primary)', borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              <span style={{ fontSize: '14px', fontWeight: 600 }}>Loading graph data…</span>
+              <span style={{ fontSize: '12px' }}>Traversing {hops}-hop neighborhood for <strong>{accountId}</strong></span>
+            </div>
           ) : !graphData || graphData.nodes.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', gap: '10px' }}>
               <span style={{ fontSize: '32px' }}>🕸</span>
@@ -398,8 +409,21 @@ export default function GraphExplorer() {
                 <span className="kv-value">{selectedNode.id}</span>
               </div>
               <div className="kv-row">
-                <span className="kv-label">Graph Risk</span>
-                <span className="kv-value">{(selectedNode.graph_risk * 100).toFixed(1)}%</span>
+                <span className="kv-label">Graph Risk Score</span>
+                <span className="kv-value" style={{
+                  fontWeight: 800,
+                  fontSize: '16px',
+                  color: selectedNode.graph_risk >= 0.5
+                    ? 'var(--risk-high)'
+                    : selectedNode.graph_risk >= 0.2
+                    ? '#B45309'
+                    : 'var(--risk-low)',
+                }}>
+                  {(selectedNode.graph_risk * 100).toFixed(1)}%
+                  <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '6px' }}>
+                    {selectedNode.graph_risk >= 0.5 ? '— High Risk' : selectedNode.graph_risk >= 0.2 ? '— Medium Risk' : '— Normal'}
+                  </span>
+                </span>
               </div>
               <button
                 type="button"
