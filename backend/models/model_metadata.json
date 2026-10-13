@@ -1,0 +1,14 @@
+{
+  "feature_cols": [
+    "amount_vs_sender_avg",
+    "new_device",
+    "new_payee",
+    "city_change",
+    "count_10m",
+    "count_1h"
+  ],
+  "threshold": 0.7,
+  "val_f1": 0.3551,
+  "train_size": 35000,
+  "test_size": 15000
+}
