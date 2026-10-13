@@ -56,37 +56,73 @@ export default function LiveFeed() {
     })
   }, [transactions, actionFilter, search])
 
-  // Quick simulation trigger for demoing live scoring
-  const handleSimulate = async (type = 'random') => {
+  // ── Multi-Tier Simulation Pools (ALLOW, OTP, HOLD, BLOCK) ─────
+  const SIMULATION_POOLS = {
+    // Low risk (< 30) → ALLOW (clean accounts, low amounts, known devices)
+    allow: [
+      { sender_id: 'ACC0001', receiver_id: 'ACC0002', device_id: 'DEV_ACC0001_0', city: 'Mumbai',    amount_range: [200, 800] },
+      { sender_id: 'ACC0050', receiver_id: 'ACC0060', device_id: 'DEV_ACC0050_0', city: 'Chennai',   amount_range: [150, 600] },
+      { sender_id: 'ACC0100', receiver_id: 'ACC0200', device_id: 'DEV_ACC0100_0', city: 'Hyderabad', amount_range: [100, 450] },
+      { sender_id: 'ACC0030', receiver_id: 'ACC0040', device_id: 'DEV_ACC0030_0', city: 'Kolkata',   amount_range: [250, 900] },
+    ],
+    // Medium-low risk (30 - 60) → OTP (moderate amounts, unfamiliar city or new device)
+    otp: [
+      { sender_id: 'ACC0001', receiver_id: 'ACC1451', device_id: 'DEV_ACC0001_0', city: 'Unknown',   amount_range: [8000, 11000] },
+      { sender_id: 'ACC0050', receiver_id: 'ACC0248', device_id: 'DEV_ACC0050_0', city: 'Unknown',   amount_range: [10000, 13000] },
+      { sender_id: 'ACC0001', receiver_id: 'ACC0002', device_id: 'DEV_NEW_80',    city: 'Unknown',   amount_range: [2500, 3500] },
+    ],
+    // Elevated risk (60 - 85) → HOLD (higher amounts, suspicious devices, medium graph flags)
+    hold: [
+      { sender_id: 'ACC0248', receiver_id: 'ACC1936', device_id: 'DEV_SHARED_44', city: 'Chennai',   amount_range: [7000, 9500] },
+      { sender_id: 'ACC1451', receiver_id: 'ACC1799', device_id: 'DEV_BURNER_11', city: 'Offshore',  amount_range: [42000, 48000] },
+      { sender_id: 'ACC1563', receiver_id: 'ACC0004', device_id: 'DEV_RING_02',   city: 'Unknown',   amount_range: [42000, 46000] },
+      { sender_id: 'ACC0248', receiver_id: 'ACC1155', device_id: 'DEV_NEW_99',    city: 'Unknown',   amount_range: [32000, 36000] },
+      { sender_id: 'ACC0093', receiver_id: 'ACC0111', device_id: 'DEV_SHARED_77', city: 'Unknown',   amount_range: [28000, 32000] },
+    ],
+    // Critical risk (85 - 100) → BLOCK with varied scores (85.9, 92.0, 92.6, 98.2, 99.5)
+    block: [
+      { sender_id: 'ACC0445', receiver_id: 'ACC0294', device_id: 'DEV_RING_05',        city: 'Mumbai',   amount_range: [18000, 22000] }, // ~85.9
+      { sender_id: 'ACC0184', receiver_id: 'ACC0178', device_id: 'DEV_BURNER_01',       city: 'Unknown',  amount_range: [32000, 38000] }, // ~92.0
+      { sender_id: 'ACC0445', receiver_id: 'ACC0294', device_id: 'DEV_RING_05',        city: 'Unknown',  amount_range: [28000, 34000] }, // ~92.6
+      { sender_id: 'ACC1050', receiver_id: 'ACC1796', device_id: 'DEV_BURNER_RING_77', city: 'Offshore', amount_range: [70000, 80000] }, // ~98.2
+      { sender_id: 'ACC0445', receiver_id: 'ACC0294', device_id: 'DEV_RING_BURNER_01', city: 'Unknown',  amount_range: [88000, 98000] }, // ~99.5
+    ],
+  }
+
+  const randBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+
+  // Quick simulation — randomly picks across ALLOW (45%), OTP (25%), HOLD (15%), BLOCK (15%)
+  const handleSimulate = async () => {
     setIsSimulating(true)
     setSimMessage(null)
     try {
-      const presets = {
-        suspicious: {
-          transaction_id: `TX_LIVE_${Date.now().toString().slice(-4)}`,
-          sender_id: 'ACC0996',
-          receiver_id: 'ACC1193',
-          amount: 88500.0,
-          device_id: 'DEV_SHARED_99',
-          city: 'Unknown City',
-          timestamp: new Date().toISOString(),
-        },
-        normal: {
-          transaction_id: `TX_LIVE_${Date.now().toString().slice(-4)}`,
-          sender_id: 'ACC0001',
-          receiver_id: 'ACC0002',
-          amount: 45.5,
-          device_id: 'DEV_TRUSTED_01',
-          city: 'New York',
-          timestamp: new Date().toISOString(),
-        },
+      const rand = Math.floor(Math.random() * 900000) + 100000
+      const roll = Math.random()
+      let tier = 'allow'
+      if (roll < 0.45) tier = 'allow'
+      else if (roll < 0.70) tier = 'otp'
+      else if (roll < 0.85) tier = 'hold'
+      else tier = 'block'
+
+      const pool = SIMULATION_POOLS[tier]
+      const preset = pool[Math.floor(Math.random() * pool.length)]
+      const amount = randBetween(...preset.amount_range)
+
+      const tag = tier[0].toUpperCase()
+      const payload = {
+        transaction_id: `TX_LIVE_${tag}${rand}`,
+        sender_id:      preset.sender_id,
+        receiver_id:    preset.receiver_id,
+        amount,
+        device_id:      preset.device_id,
+        city:           preset.city,
+        timestamp:      new Date().toISOString(),
       }
 
-      const payload = type === 'suspicious' ? presets.suspicious : presets.normal
       const res = await post('/score', payload)
-      setSimMessage(`Scored ${payload.transaction_id}: ${res.action} (${res.risk_score} risk)`)
+      setSimMessage(`${payload.transaction_id}: ${res.action} — score ${res.risk_score}`)
       await refetch()
-      setTimeout(() => setSimMessage(null), 4000)
+      setTimeout(() => setSimMessage(null), 5000)
     } catch (err) {
       setSimMessage(`Error: ${err.message}`)
     } finally {
@@ -96,7 +132,7 @@ export default function LiveFeed() {
 
   const formatAmount = (amt) => {
     if (typeof amt !== 'number') return amt ?? '—'
-    return `$${amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return `₹${amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   const formatTime = (iso) => {
@@ -128,21 +164,12 @@ export default function LiveFeed() {
           )}
           <button
             type="button"
-            className="btn btn-ghost"
-            onClick={() => handleSimulate('normal')}
-            disabled={isSimulating}
-            title="Inject a low-risk test transaction"
-          >
-            + Normal Tx
-          </button>
-          <button
-            type="button"
             className="btn btn-primary"
-            onClick={() => handleSimulate('suspicious')}
+            onClick={handleSimulate}
             disabled={isSimulating}
-            title="Inject a high-risk anomalous transfer"
+            title="Inject a random transaction (mix of normal & anomalous)"
           >
-            ⚡ Test Anomalous Tx
+            {isSimulating ? '⏳ Scoring…' : '⚡ Simulate Transaction'}
           </button>
           <button
             type="button"
@@ -204,7 +231,7 @@ export default function LiveFeed() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => handleSimulate('suspicious')}
+              onClick={handleSimulate}
             >
               Inject Demo Transaction
             </button>

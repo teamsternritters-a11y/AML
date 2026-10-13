@@ -28,7 +28,7 @@ export default function InvestigationDrawer({ transaction, onClose }) {
   } = transaction
 
   const formattedAmount = typeof amount === 'number'
-    ? `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    ? `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : amount
 
   const getScoreColor = (s) => {

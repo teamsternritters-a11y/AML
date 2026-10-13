@@ -331,7 +331,7 @@ export default function GraphExplorer() {
                         <td>{typeof l.source === 'object' ? l.source.id : l.source}</td>
                         <td>{typeof l.target === 'object' ? l.target.id : l.target}</td>
                         <td>{(l.amounts || []).length}</td>
-                        <td>${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td>₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                       </tr>
                     )
                   })}
