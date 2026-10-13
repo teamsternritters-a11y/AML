@@ -1,4 +1,4 @@
-# DEMO.md — Synesis 26 Presentation Script
+# DEMO.md — SENTRIX Presentation Script
 
 > **Duration:** 2 minutes  
 > **Format:** Live dashboard walkthrough  

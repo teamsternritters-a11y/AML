@@ -13,7 +13,7 @@ from backend.engine import score_transaction
 from backend.features import get_feature_columns
 from backend.graph import build_graph, get_neighborhood, get_account_graph_risk
 
-app = FastAPI(title="AML Risk Orchestration API", version="1.0.0")
+app = FastAPI(title="SENTRIX — AML Risk Orchestration API", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 CASES = {}

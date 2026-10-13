@@ -172,7 +172,7 @@ export default function LoginPage() {
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
             }}>
-              SYNESIS 26
+              SENTRIX
             </div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: 400, marginTop: '4px' }}>
               Fraud &amp; AML Risk Platform

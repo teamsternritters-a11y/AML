@@ -120,7 +120,7 @@ SEP  = "=" * 70
 SEP2 = "-" * 70
 
 print(f"\n\033[1m{SEP}\033[0m")
-print(f"\033[1m  SYNESIS 26 — RISK ENGINE LOGIC VERIFICATION REPORT\033[0m")
+print(f"\033[1m  SENTRIX — RISK ENGINE LOGIC VERIFICATION REPORT\033[0m")
 print(f"\033[1m{SEP}\033[0m\n")
 
 all_passed = True

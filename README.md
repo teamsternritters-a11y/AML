@@ -1,4 +1,4 @@
-# Synesis 26 · Fintech #1 — Real-Time Fraud & AML Risk Orchestration
+# SENTRIX · Real-Time Fraud & AML Risk Orchestration
 
 > A prototype hybrid risk-scoring engine that processes financial transactions in real time,
 > combining Machine Learning, Graph Analysis, and Business Rules — then surfaces results
@@ -28,7 +28,7 @@ Open **http://localhost:5173** in your browser.
 
 ## What It Does
 
-Synesis 26 is a real-time risk orchestration engine that scores every inbound payment using
+SENTRIX is a real-time risk orchestration engine that scores every inbound payment using
 three independent signals — a LightGBM ML model trained on behavioural features, a
 NetworkX graph that detects circular transfers and shared-device syndicates, and a
 deterministic rule layer that catches velocity spikes and new-device anomalies.

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: synesis26-backend
+    name: sentrix-backend
     env: python
     region: oregon
     plan: free

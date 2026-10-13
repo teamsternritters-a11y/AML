@@ -38,7 +38,7 @@ export default function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <h1>SYNESIS 26<br />FRAUD &amp; AML</h1>
+          <h1>SENTRIX<br />FRAUD &amp; AML</h1>
         </div>
         <div className="sidebar-section-label">NAVIGATION</div>
         <nav className="sidebar-nav">
