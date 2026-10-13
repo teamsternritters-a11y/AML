@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: synesis26-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python backend/data.py && python backend/train.py && python backend/graph.py"
+    startCommand: "uvicorn backend.api:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
