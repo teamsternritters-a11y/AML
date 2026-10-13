@@ -1,0 +1,13 @@
+pandas
+numpy
+lightgbm
+shap
+joblib
+scikit-learn
+pyarrow
+networkx
+fastapi
+uvicorn
+httpx
+tqdm
+pydantic
