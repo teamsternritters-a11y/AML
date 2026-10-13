@@ -1,7 +1,9 @@
-const BASE = '/api'
+const rawBase = import.meta.env.VITE_API_BASE_URL || '/api'
+const BASE = rawBase.replace(/\/+$/, '')
 
 async function request(method, path, data, params) {
-  let url = BASE + path
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  let url = BASE + cleanPath
   if (params && Object.keys(params).length > 0) {
     const q = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([,v]) => v != null && v !== '')))
     url += '?' + q.toString()
