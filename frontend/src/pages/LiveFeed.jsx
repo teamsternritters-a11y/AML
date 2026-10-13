@@ -169,7 +169,7 @@ export default function LiveFeed() {
             disabled={isSimulating}
             title="Inject a random transaction (mix of normal & anomalous)"
           >
-            {isSimulating ? '⏳ Scoring…' : '⚡ Simulate Transaction'}
+            {isSimulating ? 'Scoring…' : 'Simulate Transaction'}
           </button>
           <button
             type="button"

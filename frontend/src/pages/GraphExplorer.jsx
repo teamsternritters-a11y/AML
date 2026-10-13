@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import ForceGraph2D from 'react-force-graph-2d'
 import { get } from '../api/client.js'
 import LoadingState from '../components/LoadingState.jsx'
+import { GraphIcon } from '../components/Icons.jsx'
 
 const SAMPLE_ACCOUNTS = ['ACC0996', 'ACC1193', 'ACC0001', 'ACC0042', 'ACC0500']
 
@@ -211,7 +212,7 @@ export default function GraphExplorer() {
             </div>
           ) : !graphData || graphData.nodes.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', gap: '10px' }}>
-              <span style={{ fontSize: '32px' }}>🕸</span>
+              <GraphIcon size={36} style={{ color: 'var(--text-muted)' }} />
               <span>No graph data loaded. Search an account or select one above.</span>
             </div>
           ) : viewMode === 'canvas' ? (

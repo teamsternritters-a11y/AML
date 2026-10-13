@@ -270,7 +270,7 @@ export default function CaseQueue() {
                       onClick={() => handleDecision('approve')}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? '⏳ Saving…' : '✓ Release & Approve Transaction'}
+                      {isSubmitting ? 'Saving…' : '✓ Release & Approve Transaction'}
                     </button>
                     <button
                       type="button"
@@ -278,7 +278,7 @@ export default function CaseQueue() {
                       onClick={() => handleDecision('reject')}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? '⏳ Saving…' : '✕ Confirm Block & Escalate SAR'}
+                      {isSubmitting ? 'Saving…' : '✕ Confirm Block & Escalate SAR'}
                     </button>
                   </div>
                 </div>
